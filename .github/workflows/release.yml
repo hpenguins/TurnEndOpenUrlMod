@@ -129,7 +129,7 @@ jobs:
 
             ## 说明
 
-            - 默认仅在当前角色死亡时，通过 Windows Shell 权威通道自动在默认浏览器中打开指定网址（默认 B 站）。
+            - 默认仅在当前角色死亡时，自动在默认浏览器中打开指定网址（默认 B 站）。
             - 可选开启回合结束打开网页功能（`TriggerOnTurnEnd`）。
             - 配置位于 `mods\TurnEndOpenUrlMod\config.json`，也可在 AstralParty.Toys 的模组配置页修改。
             - 完整说明与配置项见仓库 [README](${{ github.server_url }}/${{ github.repository }}#readme)。
