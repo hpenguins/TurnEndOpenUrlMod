@@ -1,1 +1,1 @@
-{"id":"TurnEndOpenUrlMod","name":"回合结束打开网页","version":"1.0.0","author":"hpenguins","description":"当角色死亡（或开启回合结束时），自动通过本机默认浏览器打开指定网页（默认 https://bilibili.com）。","permissions":1,"sdkVersion":"2.9.1","dependencies":[]}
+{"id":"TurnEndOpenUrlMod","name":"回合结束打开网页","version":"1.0.1","author":"hpenguins","description":"当角色死亡（或开启回合结束时），自动通过本机默认浏览器打开指定网页（默认 https://bilibili.com）。","permissions":1,"sdkVersion":"2.9.1","dependencies":[]}

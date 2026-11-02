@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using CesiumLoader.SDK.Configuration;
 using CesiumLoader.SDK.Gameplay;
 using CesiumLoader.SDK.Logging;
@@ -328,59 +327,14 @@ namespace TurnEndOpenUrlMod
 
         private void OpenBrowser(string url)
         {
-            bool launched = false;
-
-            // 方案 1: 通过 explorer.exe 唤起（Windows Shell 级别调度，能穿透全屏窗口遮挡并将默认浏览器拉到前台）
-            try
-            {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "explorer.exe",
-                    Arguments = "\"" + url + "\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                var proc = Process.Start(psi);
-                if (proc != null)
-                {
-                    launched = true;
-                    Log.Info($"[TurnEndOpenUrl] 已通过 explorer.exe 唤起默认浏览器: {url}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warn("[TurnEndOpenUrl] explorer.exe 唤起异常: " + ex.Message);
-            }
-
-            // 方案 2: 标准 Process.Start(url) 唤起
-            if (!launched)
-            {
-                try
-                {
-                    var psi = new ProcessStartInfo
-                    {
-                        FileName = url,
-                        UseShellExecute = true
-                    };
-                    Process.Start(psi);
-                    launched = true;
-                    Log.Info($"[TurnEndOpenUrl] 已通过 Process.Start 唤起默认浏览器: {url}");
-                }
-                catch (Exception ex)
-                {
-                    Log.Warn("[TurnEndOpenUrl] Process.Start 唤起异常: " + ex.Message);
-                }
-            }
-
-            // 方案 3: Unity 原生 Application.OpenURL 兜底
             try
             {
                 Application.OpenURL(url);
-                Log.Info($"[TurnEndOpenUrl] 已调用 Application.OpenURL: {url}");
+                Log.Info($"[TurnEndOpenUrl] 已通过 Application.OpenURL 打开网页: {url}");
             }
             catch (Exception ex)
             {
-                Log.Warn("[TurnEndOpenUrl] Application.OpenURL 异常: " + ex.Message);
+                Log.Error("[TurnEndOpenUrl] Application.OpenURL 唤起异常: " + ex);
             }
         }
 
