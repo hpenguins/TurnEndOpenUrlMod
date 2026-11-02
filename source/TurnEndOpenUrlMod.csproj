@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>TurnEndOpenUrlMod</AssemblyName>
+    <Version>1.0.0</Version>
+    <LoaderDir Condition="'$(LoaderDir)' == ''">$(MSBuildThisFileDirectory)../../AstralParty_ModLoader</LoaderDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CesiumLoader.SDK">
+      <HintPath Condition="Exists('$(CesiumSdkDir)CesiumLoader.SDK.dll')">$(CesiumSdkDir)CesiumLoader.SDK.dll</HintPath>
+      <HintPath Condition="!Exists('$(CesiumSdkDir)CesiumLoader.SDK.dll')">$(LoaderDir)/sdk/CesiumLoader.SDK.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="AstralParty.Runtime">
+      <HintPath>$(GameRefsDir)AstralParty.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameRefsDir)UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UniTask">
+      <HintPath>$(GameRefsDir)UniTask.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Google.Protobuf.Runtime">
+      <HintPath>$(GameRefsDir)Google.Protobuf.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\TurnEndOpenUrlMod.json" CopyToOutputDirectory="PreserveNewest" Link="TurnEndOpenUrlMod.json" />
+  </ItemGroup>
+</Project>

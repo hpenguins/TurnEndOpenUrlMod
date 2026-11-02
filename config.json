@@ -1,0 +1,18 @@
+{
+  "Enabled": true,
+  "TargetUrl": "https://bilibili.com",
+  "TriggerOnTurnEnd": false,
+  "OnlyMyTurn": true,
+  "TriggerOnDeath": true,
+  "OnlyMyDeath": true,
+  "CooldownSeconds": 3,
+  "_comments": {
+    "Enabled": "总开关。",
+    "TargetUrl": "触发时自动在系统默认浏览器中打开的网页地址。",
+    "TriggerOnTurnEnd": "回合结束时是否打开网页（默认关闭）。",
+    "OnlyMyTurn": "是否仅在自己的行动回合结束时打开网页（设为 false 则任何人的回合结束均触发）。",
+    "TriggerOnDeath": "角色死亡时是否自动打开网页（默认开启）。",
+    "OnlyMyDeath": "是否仅在自己的角色死亡时打开网页（设为 false 则任何玩家角色死亡均触发）。",
+    "CooldownSeconds": "触发冷却时间（秒），默认 3 秒，防止短时间内重复触发。"
+  }
+}

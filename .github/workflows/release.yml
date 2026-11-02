@@ -1,0 +1,135 @@
+name: Release
+
+# 推送 tag 时: 准备引用程序集 → 编译 → 跑单测 → 打包 → 创建 GitHub Release。
+# 包内布局为 Mods 目录式: zip 根目录下是 TurnEndOpenUrlMod\ 文件夹,
+# 解压到 AstralParty_ModLoader\mods\ 即得到 mods\TurnEndOpenUrlMod\。
+on:
+  push:
+    tags:
+      - "v*"
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # 编译所需的 CesiumLoader.SDK 与游戏程序集从该 tag 取得
+  CESIUM_LOADER_REF: modloader-2.9.1
+
+jobs:
+  build:
+    name: Build and package
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Prepare reference assemblies
+        shell: pwsh
+        run: pwsh -NoProfile -File tools/fetch-refs.ps1 -CesiumLoaderRef $env:CESIUM_LOADER_REF
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $version = "${{ github.ref_name }}" -replace '^v', ''
+          } else {
+            $version = "manual-${{ github.run_number }}"
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "version=$version"
+
+      - name: Verify sidecar version
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_type }}" -ne "tag") { Write-Host "手动构建, 跳过标签校验"; exit 0 }
+          $sidecar = Get-Content TurnEndOpenUrlMod.json -Raw | ConvertFrom-Json
+          if ($sidecar.version -ne "${{ steps.version.outputs.version }}") {
+            throw "标签版本 ${{ steps.version.outputs.version }} 与 TurnEndOpenUrlMod.json 的 version $($sidecar.version) 不一致"
+          }
+
+      - name: Build
+        shell: pwsh
+        run: |
+          dotnet build source/TurnEndOpenUrlMod.csproj -c Release --nologo
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run tests
+        shell: pwsh
+        run: |
+          dotnet test tests/TurnEndOpenUrlMod.Tests/TurnEndOpenUrlMod.Tests.csproj -c Release --nologo
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Stage package
+        shell: pwsh
+        run: |
+          $out = "source/bin/Release/netstandard2.0"
+          $stage = "staging/TurnEndOpenUrlMod"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          foreach ($file in @("TurnEndOpenUrlMod.dll", "TurnEndOpenUrlMod.pdb")) {
+            $path = Join-Path $out $file
+            if (-not (Test-Path $path)) { throw "缺少构建产物: $path" }
+            Copy-Item $path $stage -Force
+          }
+          Copy-Item "TurnEndOpenUrlMod.json" $stage -Force
+          if (Test-Path "config.json") {
+            Copy-Item "config.json" $stage -Force
+          }
+
+          $zip = "TurnEndOpenUrlMod-${{ steps.version.outputs.version }}.zip"
+          Compress-Archive -Path staging/TurnEndOpenUrlMod -DestinationPath $zip -CompressionLevel Optimal
+          Copy-Item $zip "TurnEndOpenUrlMod.zip" -Force
+          Get-ChildItem *.zip | Select-Object Name, Length
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: turn-end-open-url-package
+          path: TurnEndOpenUrlMod*.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    name: Create release
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: turn-end-open-url-package
+          path: artifacts
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: 回合结束打开网页 ${{ github.ref_name }}
+          files: artifacts/*.zip
+          fail_on_unmatched_files: true
+          body: |
+            ## 安装
+
+            1. 下载本页附件里的 `TurnEndOpenUrlMod-<版本>.zip`（或固定地址 `TurnEndOpenUrlMod.zip`）。
+            2. 解压到游戏 exe 目录下的 `AstralParty_ModLoader\mods\`，得到 `mods\TurnEndOpenUrlMod\TurnEndOpenUrlMod.dll`、`TurnEndOpenUrlMod.json` 与 `config.json`。
+            3. 启动游戏。已有旧版本时覆盖更新即可。
+
+            需要 CesiumLoader（SDK 不低于 2.9.1）。卸载时删除 `mods\TurnEndOpenUrlMod\` 目录。
+
+            ## 说明
+
+            - 默认仅在当前角色死亡时，通过 Windows Shell 权威通道自动在默认浏览器中打开指定网址（默认 B 站）。
+            - 可选开启回合结束打开网页功能（`TriggerOnTurnEnd`）。
+            - 配置位于 `mods\TurnEndOpenUrlMod\config.json`，也可在 AstralParty.Toys 的模组配置页修改。
+            - 完整说明与配置项见仓库 [README](${{ github.server_url }}/${{ github.repository }}#readme)。

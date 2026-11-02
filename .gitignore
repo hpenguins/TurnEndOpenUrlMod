@@ -1,0 +1,16 @@
+# Build outputs
+bin/
+obj/
+dist/
+artifacts/
+staging/
+*.user
+*.suo
+.vs/
+.idea/
+TestResults/
+*.zip
+*.part
+
+# References (fetched via tools/fetch-refs.ps1, not committed)
+refs/

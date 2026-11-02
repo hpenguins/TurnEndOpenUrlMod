@@ -1,0 +1,28 @@
+<Project>
+
+  <!--
+    CesiumLoader.SDK.dll 与游戏程序集(热更 AstralParty.Runtime 等)不入库,
+    由 tools\fetch-refs.ps1 释放到 refs\ 与 refs\game\。
+
+    自备游戏程序集时可用环境变量或属性覆盖:
+      $env:CESIUM_GAME_REFS = 'D:\extract\extracted_dlls'
+      dotnet build -p:GameRefsDir=D:\extract\extracted_dlls\
+      dotnet build -p:CesiumSdkDir=D:\path\to\sdk\
+  -->
+  <PropertyGroup>
+    <CesiumSdkDir Condition="'$(CesiumSdkDir)' == ''">$([MSBuild]::EnsureTrailingSlash('$(MSBuildThisFileDirectory)refs'))</CesiumSdkDir>
+    <GameRefsDir Condition="'$(GameRefsDir)' == '' and '$(CESIUM_GAME_REFS)' != ''">$([MSBuild]::EnsureTrailingSlash('$(CESIUM_GAME_REFS)'))</GameRefsDir>
+    <GameRefsDir Condition="'$(GameRefsDir)' == ''">$([MSBuild]::EnsureTrailingSlash('$(MSBuildThisFileDirectory)refs\game'))</GameRefsDir>
+  </PropertyGroup>
+
+  <!-- 缺少引用时立刻给出可操作的提示, 而不是等到编译期报类型找不到 -->
+  <Target Name="TurnEndOpenUrlVerifyReferencePaths" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <_TurnEndOpenUrlMissingReference Include="@(Reference)"
+                                       Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')" />
+    </ItemGroup>
+    <Error Condition="'@(_TurnEndOpenUrlMissingReference)' != ''"
+           Text="TurnEndOpenUrlMod: 缺少引用的程序集 @(_TurnEndOpenUrlMissingReference->'%(HintPath)', '; ')。请先准备 refs\（或用 CESIUM_GAME_REFS 指向已提取的游戏程序集目录）。" />
+  </Target>
+
+</Project>
